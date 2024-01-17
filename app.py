@@ -87,7 +87,6 @@ class ServerProcessor:
                 chunk = audio_stream[:self.min_chunk*SAMPLING_RATE]
                 audio_stream = audio_stream[self.min_chunk*SAMPLING_RATE:]
                 # index error means we are less
-                print(f"chunk size: {len(chunk)}", file=sys.stderr, flush=True)
             except:
                 break
 
