@@ -81,7 +81,7 @@ class ServerProcessor:
         out = []
 
         # Loop until we have enough audio data
-        while sum(len(x) for x in out) < 1.0*self.min_chunk*SAMPLING_RATE:
+        while len(out) < 1.0*self.min_chunk*SAMPLING_RATE:
             # Read the next chunk of audio data
             try:
                 chunk = audio_stream[:self.min_chunk*SAMPLING_RATE]
@@ -100,10 +100,10 @@ class ServerProcessor:
             return None
 
         # Concatenate all the audio chunks into a single numpy array and return it
-        try:
-            return np.concatenate(out)
-        except:
-            return out
+        # try:
+        #     return np.concatenate(out)
+        # except:
+        return out
 
 
 
@@ -127,7 +127,7 @@ class ServerProcessor:
         self.online_asr_proc.init()
         a = self.receive_audio_chunk(audio)
         if a is None:
-            print("break here", file=sys.stderr)
+            print("break here", file=sys.stderr, flush=True)
             return
         self.online_asr_proc.insert_audio_chunk(a)
         o = online.process_iter()
