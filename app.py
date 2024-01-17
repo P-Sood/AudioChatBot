@@ -71,7 +71,8 @@ class ASRTranscriber:
         if model != self.current_model:
             # Only reinitialize the ASR and processor if the model has changed
             t = time.time()
-            self.asr = FasterWhisperASR(modelsize=model, lan='en', cache_dir=None, model_dir=None)
+            self.asr = FasterWhisperASR(modelsize=model[0], lan='en', cache_dir=None, model_dir=None)
+            self.current_model = model[0]
             if self.curr_vad != vad:
                 print(f"setting VAD filter to {args.vad}",file=sys.stderr)
                 self.curr_vad = vad
@@ -81,7 +82,6 @@ class ASRTranscriber:
             print(f"done. It took {round(e-t,2)} seconds.",file=sys.stderr)
             tokenizer = None
             self.online = OnlineASRProcessor(self.asr, tokenizer, buffer_trimming=('segment', 15))
-            self.current_model = model
         
 
         proc = ServerProcessor(self.online, min_chunk=1.0 )
