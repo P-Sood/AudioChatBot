@@ -120,9 +120,9 @@ demo = gr.Interface(
     fn=transcriber.transcribe, 
     inputs=[
         gr.Audio(sources=["microphone"], streaming=True),
-        gr.Textbox(default="tiny", label="Model"),
-        gr.Checkbox(default=False, label="VAD"),
-        gr.Checkbox(default=True, label="Real Time"),
+        gr.Textbox(value="tiny", placeholder = "tiny", label="Model"),
+        gr.Checkbox(value=False, label="VAD"),
+        gr.Checkbox(value=True, label="Real Time"),
     ],
     outputs="text",
     live=True
