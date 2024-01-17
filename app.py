@@ -75,7 +75,7 @@ class ServerProcessor:
         y = y.astype(np.float32)
         y /= np.max(np.abs(y))
             
-        return np.concatenate(y)
+        return y
 
 
     def format_output_transcript(self,o):
