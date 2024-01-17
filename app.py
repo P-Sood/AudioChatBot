@@ -19,7 +19,7 @@ SAMPLING_RATE = 16000
 
 args = {
         "min-chunk-size" : 1.0,
-        "model" : 'tiny',
+        "model" : 'large-v2',
         "model_cache_dir" : None,
         "model_dir" : None,
         "lan" : 'en',
@@ -71,11 +71,37 @@ class ServerProcessor:
     
     def receive_audio_chunk(self, audio_stream):
         
-        sr, y = audio_stream
-        y = y.astype(np.float32)
-        y /= np.max(np.abs(y))
+        # sr, y = audio_stream
+        # y = y.astype(np.float32)
+        # y /= np.max(np.abs(y))
             
-        return y
+        # return y
+        
+        # Initialize an empty list to hold the audio chunks
+        out = []
+
+        # Loop until we have enough audio data
+        while sum(len(x) for x in out) < self.min_chunk*SAMPLING_RATE:
+            # Read the next chunk of audio data
+            chunk = audio_stream[:self.min_chunk*SAMPLING_RATE]
+
+            # If there's no more audio data, break the loop
+            if not chunk:
+                break
+
+            # Append the audio data to our list
+            out.append(chunk)
+
+            # Remove the processed chunk from the audio data
+            audio_stream = audio_stream[self.min_chunk*SAMPLING_RATE:]
+
+        # If we didn't get any audio data, return None
+        if not out:
+            return None
+
+        # Concatenate all the audio chunks into a single numpy array and return it
+        return np.concatenate(out)
+
 
 
     def format_output_transcript(self,o):
