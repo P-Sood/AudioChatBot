@@ -241,6 +241,7 @@ class OnlineASRProcessor:
         self.silence_iters = 0
 
     def insert_audio_chunk(self, audio):
+        print("We are here" , file = sys.stderr , flush=True)
         self.audio_buffer = np.append(self.audio_buffer, audio)
 
     def prompt(self):
