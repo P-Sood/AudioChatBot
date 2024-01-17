@@ -20,43 +20,20 @@ class dotdict(dict):
     
 SAMPLING_RATE = 16000
 
-args = {
-        "min-chunk-size" : 1.0,
-        "model" : os.environ.get("model", "tiny"),
-        "model_cache_dir" : None,
-        "model_dir" : None,
-        "lan" : 'en',
-        "task" : 'transcribe',
-        "backend" : "faster-whisper",
-        "vad" : bool(os.environ.get("vad", False)),
-        "buffer_trimming" : "segment",
-        "buffer_trimming_sec" : 15,
-        "real_time" : bool(os.environ.get("real_time", True)),
-        }
+# args = {
+#         "min-chunk-size" : 1.0,
+#         "model_cache_dir" : None,
+#         "model_dir" : None,
+#         "lan" : 'en',
+#         "task" : 'transcribe',
+#         "backend" : "faster-whisper",
+#         "buffer_trimming" : "segment",
+#         "buffer_trimming_sec" : 15,
+#         }
 
-args = dotdict(args)
-
-# comment
-
-size = args.model
-language = args.lan
-
-t = time.time()
-print(f"Loading Whisper {size} model for {language}...",file=sys.stderr,end=" ",flush=True)
-
-ASR = FasterWhisperASR(modelsize=size, lan=language, cache_dir=args.model_cache_dir, model_dir=args.model_dir)
-TGT_LANGUAGE = language
-
-e = time.time()
-print(f"done. It took {round(e-t,2)} seconds.",file=sys.stderr)
+# args = dotdict(args)
 
 
-print(f"setting VAD filter to {args.vad}",file=sys.stderr)
-if args.vad:
-    ASR.use_vad()
-TOKENIZER = None
-ONLINE = OnlineASRProcessor(ASR,TOKENIZER,buffer_trimming=(args.buffer_trimming, args.buffer_trimming_sec))
-REAL_TIME = args.real_time
 WORDS = ''
 def clear_words():
     global WORDS
@@ -68,11 +45,14 @@ def clear_words():
 threading.Thread(target=clear_words).start()
 class ServerProcessor:
 
-    def __init__(self, online_asr_proc, min_chunk):
+    def __init__(self, online_asr_proc : OnlineASRProcessor, min_chunk, real_time):
         self.online_asr_proc = online_asr_proc
+        self.online = online_asr_proc
+        
         self.min_chunk = 1 #min_chunk TODO: change this to min_chunk
         # self.t = ''
         self.last_end = None
+        self.real_time = real_time  
 
     def p_receive_audio_chunk(self, audio):
         # Convert the audio file path to audio data
@@ -88,34 +68,67 @@ class ServerProcessor:
         y = audioop.ratecv(y, 2, 1, sr, 16000, None)[0]
         y = np.frombuffer(y, dtype=np.float32)
 
-        # print(f"changed y to become \n {y} \n", file=sys.stderr, flush=True)
         return y
 
 
     def process(self, audio):
         global WORDS
         self.online_asr_proc.init()
-        a = self.t_receive_audio_chunk(audio) if REAL_TIME else self.p_receive_audio_chunk(audio)
-        # if a is None:
-        #     print("break here", file=sys.stderr, flush=True)
-        #     return
+        a = self.t_receive_audio_chunk(audio) if self.real_time else self.p_receive_audio_chunk(audio)
+
         self.online_asr_proc.insert_audio_chunk(a)
-        inc = ONLINE.process_iter()
+        inc = self.online.process_iter()
         WORDS += inc
         return WORDS
 
 
-def transcribe(audio):
+class ASRTranscriber:
+    def __init__(self):
+        self.asr = None
+        self.online = None
+        self.current_model = None
+        
+        self.curr_vad = False
+        self.curr_RT = True
 
-    proc = ServerProcessor(ONLINE, min_chunk = args.min_chunk_size)
-    result = proc.process(audio)
-    return result
+    def transcribe(self, audio, model, vad, real_time):
+        if model != self.current_model:
+            # Only reinitialize the ASR and processor if the model has changed
+            t = time.time()
+            print(f"Loading Whisper {size} model for {language}...",file=sys.stderr,end=" ",flush=True)
+            self.asr = FasterWhisperASR(modelsize=model, lan='en', cache_dir=None, model_dir=None)
+            if self.curr_vad != vad:
+                print(f"setting VAD filter to {args.vad}",file=sys.stderr)
+                self.curr_vad = vad
+                if vad:
+                    self.asr.use_vad()
+            e = time.time()
+            print(f"done. It took {round(e-t,2)} seconds.",file=sys.stderr)
+            tokenizer = None
+            self.online = OnlineASRProcessor(self.asr, tokenizer, buffer_trimming=('segment', 15))
+            self.current_model = model
+        if self.curr_RT != real_time:
+            self.curr_RT = real_time
+
+        proc = ServerProcessor(self.online, min_chunk=1.0 , real_time=real_time)
+        result = proc.process(audio)
+        return result
+
+transcriber = ASRTranscriber()
 
 demo = gr.Interface(
-    fn=transcribe, 
-    inputs=gr.Audio(sources=["microphone"], streaming=True),
+    fn=transcriber.transcribe, 
+    inputs=[
+        gr.Audio(sources=["microphone"], streaming=True),
+        gr.inputs.Textbox(default="tiny", label="Model"),
+        gr.inputs.Checkbox(default=False, label="VAD"),
+        gr.inputs.Checkbox(default=True, label="Real Time"),
+    ],
     outputs="text",
     live=True
 )
+
+demo.launch(debug=True)
+
 
 demo.launch(debug=True)
