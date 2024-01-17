@@ -3,7 +3,7 @@ import numpy as np
 import sys
 import os
 import time
-from ...whisper_streaming.whisper_online import *
+from whisper_online import *
 # Load your model
 class dotdict(dict):
     """dot.notation access to dictionary attributes"""
