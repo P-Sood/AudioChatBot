@@ -125,7 +125,7 @@ class ServerProcessor:
 
 
 def transcribe(audio):
-    proc = ServerProcessor(online, min_chunk)
+    proc = ServerProcessor(online, min_chunk = args.min_chunk_size)
     result = proc.process(audio)
     return result
 
