@@ -5,6 +5,8 @@ import os
 import time
 from whisper_online import *
 # Load your model
+
+#unnecesary comment
 class dotdict(dict):
     """dot.notation access to dictionary attributes"""
     __getattr__ = dict.get
