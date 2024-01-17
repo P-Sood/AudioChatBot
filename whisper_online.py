@@ -281,8 +281,8 @@ class OnlineASRProcessor:
         o = self.transcript_buffer.flush()
         self.commited.extend(o)
         print(">>>>COMPLETE NOW:",self.to_flush(o),file=self.logfile,flush=True)
-        inc = self.transcript_buffer.complete()
-        print("INCOMPLETE:",self.to_flush(inc),file=self.logfile,flush=True)
+        inc = self.to_flush(self.transcript_buffer.complete())
+        print("INCOMPLETE:",inc,file=self.logfile,flush=True)
 
         # there is a newly confirmed text
 
