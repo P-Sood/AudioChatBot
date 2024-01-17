@@ -4,6 +4,8 @@ import sys
 import os
 import time
 from whisper_online import *
+import io
+import soundfile as sf
 # Load your model
 
 #unnecesary comment
@@ -62,10 +64,38 @@ class ServerProcessor:
 
         self.last_end = None
 
-    def receive_audio_chunk(self, audio):
-        # Convert the audio file path to audio data
-        audio_data = load_audio_chunk(audio, 0, 1)
-        return audio_data
+    # def receive_audio_chunk(self, audio):
+    #     # Convert the audio file path to audio data
+    #     audio_data = load_audio_chunk(audio, 0, 1)
+    #     return audio_data
+    
+    def receive_audio_chunk(self, audio_stream):
+        # Initialize an empty list to hold the audio chunks
+        out = []
+
+        # Loop until we have enough audio data
+        while sum(len(x) for x in out) < self.min_chunk*SAMPLING_RATE:
+            # Read the next chunk of audio data from the stream
+            raw_bytes = audio_stream.read(self.min_chunk*SAMPLING_RATE)
+
+            # If there's no more audio data, break the loop
+            if not raw_bytes:
+                break
+
+            # Convert the raw bytes to audio data
+            sf = sf.SoundFile(io.BytesIO(raw_bytes), channels=1, endian="LITTLE", samplerate=SAMPLING_RATE, subtype="PCM_16", format="RAW")
+            audio, _ = librosa.load(sf, sr=SAMPLING_RATE)
+
+            # Append the audio data to our list
+            out.append(audio)
+
+        # If we didn't get any audio data, return None
+        if not out:
+            return None
+
+        # Concatenate all the audio chunks into a single numpy array and return it
+        return np.concatenate(out)
+
 
     def format_output_transcript(self,o):
 
