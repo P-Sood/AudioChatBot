@@ -4,8 +4,6 @@ import sys
 import os
 import time
 from whisper_online import *
-import io
-import soundfile as sf
 # Load your model
 
 #unnecesary comment
@@ -32,7 +30,6 @@ args = {
 
 args = dotdict(args)
 
-# comment
 
 size = args.model
 language = args.lan
@@ -40,48 +37,33 @@ language = args.lan
 t = time.time()
 print(f"Loading Whisper {size} model for {language}...",file=sys.stderr,end=" ",flush=True)
 
-ASR = FasterWhisperASR(modelsize=size, lan=language, cache_dir=args.model_cache_dir, model_dir=args.model_dir)
-TGT_LANGUAGE = language
+asr = FasterWhisperASR(modelsize=size, lan=language, cache_dir=args.model_cache_dir, model_dir=args.model_dir)
+tgt_language = language
 
 e = time.time()
 print(f"done. It took {round(e-t,2)} seconds.",file=sys.stderr)
 
 
 print("setting VAD filter",file=sys.stderr)
-ASR.use_vad()
-TOKENIZER = None
-ONLINE = OnlineASRProcessor(ASR,TOKENIZER,buffer_trimming=(args.buffer_trimming, args.buffer_trimming_sec))
+asr.use_vad()
 
+min_chunk = args.min_chunk_size
 
+tokenizer = None
+online = OnlineASRProcessor(asr,tokenizer,buffer_trimming=(args.buffer_trimming, args.buffer_trimming_sec))
 
 class ServerProcessor:
 
     def __init__(self, online_asr_proc, min_chunk):
         self.online_asr_proc = online_asr_proc
-        self.min_chunk = 1 #min_chunk TODO: change this to min_chunk
+        self.min_chunk = min_chunk
         
-        self.t = ""
-
         self.last_end = None
 
-    # def receive_audio_chunk(self, audio):
-    #     # Convert the audio file path to audio data
-    #     audio_data = load_audio_chunk(audio, 0, 1)
-    #     return audio_data
-    
-    def receive_audio_chunk(self, stream, new_chunk):
-        
-        sr, y = new_chunk
-        y = y.astype(np.float32)
-        y /= np.max(np.abs(y))
-            
-        if stream is not None:
-            stream = np.concatenate([stream, y])
-        else:
-            stream = y
-        return stream
-
-
+    def receive_audio_chunk(self, audio):
+        # Convert the audio file path to audio data
+        audio_data = load_audio_chunk(audio, 0, 1)
+        return audio_data
 
     def format_output_transcript(self,o):
 
@@ -91,36 +73,34 @@ class ServerProcessor:
                 beg = max(beg, self.last_end)
 
             self.last_end = end
-            self.t +=  f"{beg} {end}\n"
-            print("\n test \n",self.t, "\n" ,file=sys.stderr, flush=True)
+
             print("%1.0f %1.0f %s" % (beg,end,o[2]),flush=True,file=sys.stderr)
             return "%1.0f %1.0f %s" % (beg,end,o[2])
         else:
             print(o,file=sys.stderr,flush=True)
             return None
 
-    def process(self, stream, audio):
+    def process(self, audio):
         self.online_asr_proc.init()
-        a = self.receive_audio_chunk(stream, audio)
+        a = self.receive_audio_chunk(audio)
         if a is None:
-            print("break here", file=sys.stderr, flush=True)
+            print("break here", file=sys.stderr)
             return
         self.online_asr_proc.insert_audio_chunk(a)
-        o = ONLINE.process_iter()
+        o = online.process_iter()
         return self.format_output_transcript(o)
 
 
-def transcribe(stream , audio):
-
-    proc = ServerProcessor(ONLINE, min_chunk = args.min_chunk_size)
-    result = proc.process(stream , audio)
-    return stream, result
+def transcribe(audio):
+    proc = ServerProcessor(online, min_chunk)
+    result = proc.process(audio)
+    return result
 
 demo = gr.Interface(
     fn=transcribe, 
-    inputs=["state", gr.Audio(sources=["microphone"], type="filepath", streaming=True)],
-    outputs=["state", "text"],
+    inputs=gr.Audio(sources=["microphone"], type="filepath", streaming=True), 
+    outputs="text",
     live=True
 )
-
+# NEW COMMIT
 demo.launch(debug=True)
