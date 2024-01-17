@@ -21,14 +21,14 @@ def clear_words():
 threading.Thread(target=clear_words).start()
 class ServerProcessor:
 
-    def __init__(self, online_asr_proc : OnlineASRProcessor, min_chunk, real_time):
+    def __init__(self, online_asr_proc : OnlineASRProcessor, min_chunk):
         self.online_asr_proc = online_asr_proc
         self.online = online_asr_proc
         
         self.min_chunk = 1 #min_chunk TODO: change this to min_chunk
         # self.t = ''
         self.last_end = None
-        self.real_time = real_time  
+        
 
     def p_receive_audio_chunk(self, audio):
         # Convert the audio file path to audio data
@@ -50,7 +50,7 @@ class ServerProcessor:
     def process(self, audio):
         global WORDS
         self.online_asr_proc.init()
-        a = self.t_receive_audio_chunk(audio) if self.real_time else self.p_receive_audio_chunk(audio)
+        a = self.t_receive_audio_chunk(audio) if REAL_TIME else self.p_receive_audio_chunk(audio)
 
         self.online_asr_proc.insert_audio_chunk(a)
         inc = self.online.process_iter()
@@ -65,9 +65,9 @@ class ASRTranscriber:
         self.current_model = None
         
         self.curr_vad = False
-        self.curr_RT = True
+        
 
-    def transcribe(self, audio, model, vad, real_time):
+    def transcribe(self, audio, model, vad):
         if model != self.current_model:
             # Only reinitialize the ASR and processor if the model has changed
             t = time.time()
@@ -82,22 +82,20 @@ class ASRTranscriber:
             tokenizer = None
             self.online = OnlineASRProcessor(self.asr, tokenizer, buffer_trimming=('segment', 15))
             self.current_model = model
-        if self.curr_RT != real_time:
-            self.curr_RT = real_time
+        
 
-        proc = ServerProcessor(self.online, min_chunk=1.0 , real_time=real_time)
+        proc = ServerProcessor(self.online, min_chunk=1.0 )
         result = proc.process(audio)
         return result
 
 transcriber = ASRTranscriber()
-
+REAL_TIME = True
 demo = gr.Interface(
     fn=transcriber.transcribe, 
     inputs=[
         gr.Audio(sources=["microphone"], streaming=True),
-        gr.Textbox(value="tiny", placeholder = "tiny", label="Model"),
+        gr.CheckboxGroup(value=[('tiny.en'),('tiny'),('base.en'),('base'),('small.en'),('small'),('medium.en'),('medium'),('large-v1'),('large-v2'),('large-v3'),('large')] , label="Model"),
         gr.Checkbox(value=False, label="VAD"),
-        gr.Checkbox(value=True, label="Real Time"),
     ],
     outputs="text",
     live=True
