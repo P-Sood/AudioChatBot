@@ -22,15 +22,16 @@ SAMPLING_RATE = 16000
 
 args = {
         "min-chunk-size" : 1.0,
-        "model" : 'tiny',
+        "model" : os.environ.get("model", "tiny"),
         "model_cache_dir" : None,
         "model_dir" : None,
         "lan" : 'en',
         "task" : 'transcribe',
         "backend" : "faster-whisper",
-        "vad" : False,
+        "vad" : bool(os.environ.get("vad", False)),
         "buffer_trimming" : "segment",
-        "buffer_trimming_sec" : 15
+        "buffer_trimming_sec" : 15,
+        "real_time" : bool(os.environ.get("real_time", True)),
         }
 
 args = dotdict(args)
@@ -50,11 +51,12 @@ e = time.time()
 print(f"done. It took {round(e-t,2)} seconds.",file=sys.stderr)
 
 
-print("setting VAD filter",file=sys.stderr)
-ASR.use_vad()
+print(f"setting VAD filter to {args.vad}",file=sys.stderr)
+if args.vad:
+    ASR.use_vad()
 TOKENIZER = None
 ONLINE = OnlineASRProcessor(ASR,TOKENIZER,buffer_trimming=(args.buffer_trimming, args.buffer_trimming_sec))
-
+REAL_TIME = args.real_time
 WORDS = ''
 def clear_words():
     global WORDS
@@ -72,12 +74,12 @@ class ServerProcessor:
         # self.t = ''
         self.last_end = None
 
-    # def receive_audio_chunk(self, audio):
-    #     # Convert the audio file path to audio data
-    #     audio_data = load_audio_chunk(audio, 0, 1)
-    #     return audio_data
+    def p_receive_audio_chunk(self, audio):
+        # Convert the audio file path to audio data
+        audio_data = load_audio_chunk(audio, 0, 1)
+        return audio_data
     
-    def receive_audio_chunk(self, new_chunk):
+    def t_receive_audio_chunk(self, new_chunk):
         
         sr, y = new_chunk
         y = y.astype(np.float32)
@@ -93,7 +95,7 @@ class ServerProcessor:
     def process(self, audio):
         global WORDS
         self.online_asr_proc.init()
-        a = self.receive_audio_chunk(audio)
+        a = self.t_receive_audio_chunk(audio) if REAL_TIME else self.p_receive_audio_chunk(audio)
         # if a is None:
         #     print("break here", file=sys.stderr, flush=True)
         #     return
