@@ -23,7 +23,7 @@ args = {
         "lan" : 'en',
         "task" : 'transcribe',
         "backend" : "faster-whisper",
-        "vad" : True,
+        "vad" : False,
         "buffer_trimming" : "segment",
         "buffer_trimming_sec" : 15
         }
