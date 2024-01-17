@@ -94,6 +94,12 @@ class ServerProcessor:
         WORDS += inc
         return WORDS
 
+def clear_text(*args):
+    # This function will be called when the button is clicked
+    iface.reset()
+
+iface = gr.Interface(fn=clear_text, inputs="button", outputs="text")
+iface.launch()
 
 def transcribe(audio):
 
