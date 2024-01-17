@@ -113,12 +113,12 @@ def transcribe(stream , audio):
 
     proc = ServerProcessor(ONLINE, min_chunk = args.min_chunk_size)
     result = proc.process(stream , audio)
-    return result
+    return stream, result
 
 demo = gr.Interface(
     fn=transcribe, 
     inputs=["state", gr.Audio(sources=["microphone"], streaming=True)],
-    outputs="text",
+    outputs=["state", "text"],
     live=True
 )
 
