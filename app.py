@@ -58,7 +58,7 @@ class ServerProcessor:
 
     def __init__(self, online_asr_proc, min_chunk):
         self.online_asr_proc = online_asr_proc
-        self.min_chunk = min_chunk
+        self.min_chunk = 1.0 #min_chunk TODO: change this to min_chunk
         
         self.t = ""
 
