@@ -58,12 +58,16 @@ ONLINE = OnlineASRProcessor(ASR,TOKENIZER,buffer_trimming=(args.buffer_trimming,
 WORDS = ''
 def clear_words():
     global WORDS
-    while True:
-        time.sleep(30)  # Wait for 30 seconds
-        WORDS = ''  # Clear the WORDS variable
-
+    
+    time.sleep(30)  # Wait for 30 seconds
+    WORDS = ''  # Clear the WORDS variable
+    time.sleep(30)  # Wait for 30 seconds
+    WORDS = ''  # Clear the WORDS variable
+    time.sleep(30)  # Wait for 30 seconds
+    WORDS = ''  # Clear the WORDS variable
+    
 # Start the thread
-threading.Thread(target=clear_words).start()
+# threading.Thread(target=clear_words).start()
 class ServerProcessor:
 
     def __init__(self, online_asr_proc, min_chunk):
