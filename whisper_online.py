@@ -310,7 +310,7 @@ class OnlineASRProcessor:
             #self.chunk_at(t)
 
         print(f"len of buffer now: {len(self.audio_buffer)/self.SAMPLING_RATE:2.2f}",file=self.logfile)
-        return self.to_flush(o), inc
+        return self.to_flush(o), inc[2]
 
     def chunk_completed_sentence(self):
         if self.commited == []: return
