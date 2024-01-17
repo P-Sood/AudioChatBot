@@ -61,7 +61,7 @@ class ServerProcessor:
     def __init__(self, online_asr_proc, min_chunk):
         self.online_asr_proc = online_asr_proc
         self.min_chunk = 1 #min_chunk TODO: change this to min_chunk
-
+        self.t = ''
         self.last_end = None
 
     # def receive_audio_chunk(self, audio):
@@ -90,8 +90,8 @@ class ServerProcessor:
         #     return
         self.online_asr_proc.insert_audio_chunk(a)
         o, inc = ONLINE.process_iter()
-        
-        return inc
+        self.t += inc
+        return self.t
 
 
 def transcribe(audio):
