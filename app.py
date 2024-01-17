@@ -76,18 +76,22 @@ class ServerProcessor:
         # Loop until we have enough audio data
         while sum(len(x) for x in out) < self.min_chunk*SAMPLING_RATE:
             # Read the next chunk of audio data from the stream
-            raw_bytes = audio_stream.read(self.min_chunk*SAMPLING_RATE)
+            _, y = audio_stream
+            y = y.astype(np.float32)
+            y /= np.max(np.abs(y))
+            
+            # raw_bytes = y#audio_stream.read(self.min_chunk*SAMPLING_RATE)
+            
 
             # If there's no more audio data, break the loop
-            if not raw_bytes:
+            if not y:
                 break
 
             # Convert the raw bytes to audio data
-            s = sf.SoundFile(io.BytesIO(raw_bytes), channels=1, endian="LITTLE", samplerate=SAMPLING_RATE, subtype="PCM_16", format="RAW")
-            audio, _ = librosa.load(s, sr=SAMPLING_RATE)
+            y, _ = librosa.load(y, sr=SAMPLING_RATE)
 
-            # Append the audio data to our list
-            out.append(audio)
+            # Append the audio (y) data to our list
+            out.append(y)
 
         # If we didn't get any audio data, return None
         if not out:
