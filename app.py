@@ -118,7 +118,7 @@ def transcribe(stream , audio):
 
 demo = gr.Interface(
     fn=transcribe, 
-    inputs=["state", gr.Audio(sources=["microphone"], type="filepath", streaming=True)],
+    inputs=["state", gr.Audio(sources=["microphone"], streaming=True)],
     outputs=["state", "text"],
     live=True
 )
