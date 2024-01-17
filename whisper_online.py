@@ -269,9 +269,10 @@ class OnlineASRProcessor:
         """
 
         prompt, non_prompt = self.prompt()
-        print("PROMPT:", prompt, file=self.logfile)
-        print("CONTEXT:", non_prompt, file=self.logfile)
-        print(f"transcribing {len(self.audio_buffer)/self.SAMPLING_RATE:2.2f} seconds from {self.buffer_time_offset:2.2f}",file=self.logfile)
+        # print("PROMPT:", prompt, file=self.logfile)
+        # print("CONTEXT:", non_prompt, file=self.logfile)
+        # print(f"transcribing {len(self.audio_buffer)/self.SAMPLING_RATE:2.2f} seconds from {self.buffer_time_offset:2.2f}",file=self.logfile)
+        
         res = self.asr.transcribe(self.audio_buffer, init_prompt=prompt)
 
         # transform to [(beg,end,"word1"), ...]
@@ -282,6 +283,7 @@ class OnlineASRProcessor:
         self.commited.extend(o)
         print(">>>>COMPLETE NOW:",self.to_flush(o),file=self.logfile,flush=True)
         inc = self.to_flush(self.transcript_buffer.complete())
+        return inc[2]
         print("INCOMPLETE:",inc,file=self.logfile,flush=True)
 
         # there is a newly confirmed text
