@@ -72,8 +72,8 @@ class ServerProcessor:
     def receive_audio_chunk(self, stream, new_chunk):
         
         sr, y = new_chunk
-        y = y.astype(np.float32)
-        y /= np.max(np.abs(y))
+        # y = y.astype(np.float32)
+        # y /= np.max(np.abs(y))
             
         if stream is not None:
             stream = np.concatenate([stream, y])
