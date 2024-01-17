@@ -81,26 +81,30 @@ class ServerProcessor:
         out = []
 
         # Loop until we have enough audio data
-        while sum(len(x) for x in out) < self.min_chunk*SAMPLING_RATE:
+        while sum(len(x) for x in out) < 1.0*self.min_chunk*SAMPLING_RATE:
             # Read the next chunk of audio data
-            chunk = audio_stream[:self.min_chunk*SAMPLING_RATE]
-
-            # If there's no more audio data, break the loop
-            if not chunk:
+            try:
+                chunk = audio_stream[:self.min_chunk*SAMPLING_RATE]
+                audio_stream = audio_stream[self.min_chunk*SAMPLING_RATE:]
+                # index error means we are less
+                print(f"chunk size: {len(chunk)}", file=sys.stderr, flush=True)
+            except:
                 break
 
             # Append the audio data to our list
             out.append(chunk)
 
             # Remove the processed chunk from the audio data
-            audio_stream = audio_stream[self.min_chunk*SAMPLING_RATE:]
 
         # If we didn't get any audio data, return None
         if not out:
             return None
 
         # Concatenate all the audio chunks into a single numpy array and return it
-        return np.concatenate(out)
+        try:
+            return np.concatenate(out)
+        except:
+            return out
 
 
 
