@@ -69,17 +69,17 @@ class ServerProcessor:
         audio_data = load_audio_chunk(audio, 0, 1)
         return audio_data
     
-    # def receive_audio_chunk(self, stream, new_chunk):
+    def receive_audio_chunk(self, stream, new_chunk):
         
-    #     sr, y = new_chunk
-    #     y = y.astype(np.float32)
-    #     y /= np.max(np.abs(y))
+        sr, y = new_chunk
+        y = y.astype(np.float32)
+        y /= np.max(np.abs(y))
             
-    #     if stream is not None:
-    #         stream = np.concatenate([stream, y])
-    #     else:
-    #         stream = y
-    #     return stream
+        if stream is not None:
+            stream = np.concatenate([stream, y])
+        else:
+            stream = y
+        return stream
 
 
 
@@ -101,11 +101,11 @@ class ServerProcessor:
 
     def process(self, stream, audio):
         self.online_asr_proc.init()
-        a = self.receive_audio_chunk(stream, audio)
-        if a is None:
-            print("break here", file=sys.stderr, flush=True)
-            return
-        self.online_asr_proc.insert_audio_chunk(a)
+        stream = self.receive_audio_chunk(stream, audio)
+        # if stream is None:
+        #     print("break here", file=sys.stderr, flush=True)
+        #     return
+        self.online_asr_proc.insert_audio_chunk(stream)
         o = ONLINE.process_iter()
         return stream , self.format_output_transcript(o)
 
