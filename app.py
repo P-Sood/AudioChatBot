@@ -82,23 +82,6 @@ class ServerProcessor:
         return y
 
 
-
-    def format_output_transcript(self,o):
-
-        if o[0] is not None:
-            beg, end = o[0]*1000,o[1]*1000
-            if self.last_end is not None:
-                beg = max(beg, self.last_end)
-
-            self.last_end = end
-            self.t +=  f"{beg} {end}\n"
-            print("\n test \n",self.t, "\n" ,file=sys.stderr, flush=True)
-            print("%1.0f %1.0f %s" % (beg,end,o[2]),flush=True,file=sys.stderr)
-            return "%1.0f %1.0f %s" % (beg,end,o[2])
-        else:
-            print(o,file=sys.stderr,flush=True)
-            return None
-
     def process(self, audio):
         self.online_asr_proc.init()
         a = self.receive_audio_chunk(audio)
@@ -107,8 +90,8 @@ class ServerProcessor:
         #     return
         self.online_asr_proc.insert_audio_chunk(a)
         o, inc = ONLINE.process_iter()
-        print(f"inc is {inc} \n type of inc is {type(inc)}", file=sys.stderr, flush=True)
-        return self.format_output_transcript(o)
+        
+        return inc
 
 
 def transcribe(audio):
