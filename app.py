@@ -19,7 +19,7 @@ SAMPLING_RATE = 16000
 
 args = {
         "min-chunk-size" : 1.0,
-        "model" : 'large-v2',
+        "model" : 'tiny',
         "model_cache_dir" : None,
         "model_dir" : None,
         "lan" : 'en',
