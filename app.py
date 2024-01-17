@@ -83,8 +83,8 @@ class ServerProcessor:
                 break
 
             # Convert the raw bytes to audio data
-            sf = sf.SoundFile(io.BytesIO(raw_bytes), channels=1, endian="LITTLE", samplerate=SAMPLING_RATE, subtype="PCM_16", format="RAW")
-            audio, _ = librosa.load(sf, sr=SAMPLING_RATE)
+            s = sf.SoundFile(io.BytesIO(raw_bytes), channels=1, endian="LITTLE", samplerate=SAMPLING_RATE, subtype="PCM_16", format="RAW")
+            audio, _ = librosa.load(s, sr=SAMPLING_RATE)
 
             # Append the audio data to our list
             out.append(audio)
