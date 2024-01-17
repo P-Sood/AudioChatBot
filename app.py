@@ -70,36 +70,12 @@ class ServerProcessor:
     #     return audio_data
     
     def receive_audio_chunk(self, audio_stream):
-        # Initialize an empty list to hold the audio chunks
-        out = []
-
-        # Loop until we have enough audio data
-        while sum(len(x) for x in out) < self.min_chunk*SAMPLING_RATE:
-            # Read the next chunk of audio data from the stream
-            print(f"reading audio stream of type \n {type(audio_stream)} \n {audio_stream} \n",file=sys.stderr,flush=True)
-            sr, y = audio_stream
-            y = y.astype(np.float32)
-            y /= np.max(np.abs(y))
+        
+        sr, y = audio_stream
+        y = y.astype(np.float32)
+        y /= np.max(np.abs(y))
             
-            # raw_bytes = y#audio_stream.read(self.min_chunk*SAMPLING_RATE)
-            
-
-            # If there's no more audio data, break the loop
-            if not y:
-                break
-
-            # Convert the raw bytes to audio data
-            y, _ = librosa.load(y, sr=SAMPLING_RATE)
-
-            # Append the audio (y) data to our list
-            out.append(y)
-
-        # If we didn't get any audio data, return None
-        if not out:
-            return None
-
-        # Concatenate all the audio chunks into a single numpy array and return it
-        return np.concatenate(out)
+        return np.concatenate(y)
 
 
     def format_output_transcript(self,o):
