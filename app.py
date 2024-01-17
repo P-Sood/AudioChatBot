@@ -106,7 +106,8 @@ class ServerProcessor:
         #     print("break here", file=sys.stderr, flush=True)
         #     return
         self.online_asr_proc.insert_audio_chunk(a)
-        o = ONLINE.process_iter()
+        o, inc = ONLINE.process_iter()
+        print(f"inc is {inc} \n type of inc is {type(inc)}", file=sys.stderr, flush=True)
         return self.format_output_transcript(o)
 
 
