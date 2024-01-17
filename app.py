@@ -47,7 +47,7 @@ asr.use_vad()
 
 min_chunk = args.min_chunk_size
 
-
+tokenizer = None
 online = OnlineASRProcessor(asr,tokenizer,buffer_trimming=(args.buffer_trimming, args.buffer_trimming_sec))
 
 class ServerProcessor:
