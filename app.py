@@ -15,16 +15,18 @@ class dotdict(dict):
     
 SAMPLING_RATE = 16000
 
-args = {"min-chunk-size" : 1.0,
+args = {
+        "min-chunk-size" : 1.0,
         "model" : 'large-v2',
         "model_cache_dir" : None,
         "model_dir" : None,
         "lan" : 'en',
         "task" : 'transcribe',
         "backend" : "faster-whisper",
-        "vad" : False,
+        "vad" : True,
         "buffer_trimming" : "segment",
-        "buffer_trimming_sec" : 15}
+        "buffer_trimming_sec" : 15
+        }
 
 args = dotdict(args)
 
@@ -55,6 +57,8 @@ class ServerProcessor:
     def __init__(self, online_asr_proc, min_chunk):
         self.online_asr_proc = online_asr_proc
         self.min_chunk = min_chunk
+        
+        self.t = ""
 
         self.last_end = None
 
@@ -71,6 +75,7 @@ class ServerProcessor:
                 beg = max(beg, self.last_end)
 
             self.last_end = end
+            self.t +=  f"{beg} {end}\n"
             print("%1.0f %1.0f %s" % (beg,end,o[2]),flush=True,file=sys.stderr)
             return "%1.0f %1.0f %s" % (beg,end,o[2])
         else:
@@ -84,8 +89,8 @@ class ServerProcessor:
             print("break here", file=sys.stderr)
             return
         self.online_asr_proc.insert_audio_chunk(a)
-        o = online.process_iter()
-        return self.format_output_transcript(o)
+        online.process_iter()
+        return self.t
 
 
 def transcribe(audio):
@@ -100,4 +105,4 @@ demo = gr.Interface(
     live=True
 )
 
-demo.launch(share=True , debug=True)
+demo.launch(debug=True)
