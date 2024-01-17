@@ -54,14 +54,14 @@ ASR.use_vad()
 TOKENIZER = None
 ONLINE = OnlineASRProcessor(ASR,TOKENIZER,buffer_trimming=(args.buffer_trimming, args.buffer_trimming_sec))
 
-
+WORDS = ''
 
 class ServerProcessor:
 
     def __init__(self, online_asr_proc, min_chunk):
         self.online_asr_proc = online_asr_proc
         self.min_chunk = 1 #min_chunk TODO: change this to min_chunk
-        self.t = ''
+        # self.t = ''
         self.last_end = None
 
     # def receive_audio_chunk(self, audio):
@@ -83,6 +83,7 @@ class ServerProcessor:
 
 
     def process(self, audio):
+        global WORDS
         self.online_asr_proc.init()
         a = self.receive_audio_chunk(audio)
         # if a is None:
@@ -90,8 +91,8 @@ class ServerProcessor:
         #     return
         self.online_asr_proc.insert_audio_chunk(a)
         o, inc = ONLINE.process_iter()
-        self.t += inc
-        return self.t
+        WORDS += inc
+        return WORDS
 
 
 def transcribe(audio):
