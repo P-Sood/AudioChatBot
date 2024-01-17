@@ -94,8 +94,8 @@ demo = gr.Interface(
     fn=transcriber.transcribe, 
     inputs=[
         gr.Audio(sources=["microphone"], streaming=True),
-        gr.Radio(['tiny.en','tiny','base.en','base','small.en','small','medium.en','medium','large-v1','large-v2','large-v3','large'] , value = "tiny" , label="Model" , interactive=True),
-        gr.Checkbox(value=False, label="VAD"),
+        gr.Radio(['tiny.en','tiny','base.en','base','small.en','small','medium.en','medium','large-v1','large-v2','large-v3','large'], info="Turn on the audio recording before changing me. Allow from 2 to 29 seconds for me to load models" , value = "tiny" , label="Model" , interactive=True),
+        gr.Checkbox(value=False, label="VAD" , info="Turn on the audio recording before changing me. Make sure to stop the recording to check out the transcription as it can get buggy."),
     ],
     outputs="text",
     live=True
