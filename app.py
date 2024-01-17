@@ -9,30 +9,6 @@ import soundfile as sf
 import audioop
 import threading
 
-# Load your model
-
-#unnecesary comment
-class dotdict(dict):
-    """dot.notation access to dictionary attributes"""
-    __getattr__ = dict.get
-    __setattr__ = dict.__setitem__
-    __delattr__ = dict.__delitem__
-    
-SAMPLING_RATE = 16000
-
-# args = {
-#         "min-chunk-size" : 1.0,
-#         "model_cache_dir" : None,
-#         "model_dir" : None,
-#         "lan" : 'en',
-#         "task" : 'transcribe',
-#         "backend" : "faster-whisper",
-#         "buffer_trimming" : "segment",
-#         "buffer_trimming_sec" : 15,
-#         }
-
-# args = dotdict(args)
-
 
 WORDS = ''
 def clear_words():
@@ -95,7 +71,6 @@ class ASRTranscriber:
         if model != self.current_model:
             # Only reinitialize the ASR and processor if the model has changed
             t = time.time()
-            print(f"Loading Whisper {size} model for {language}...",file=sys.stderr,end=" ",flush=True)
             self.asr = FasterWhisperASR(modelsize=model, lan='en', cache_dir=None, model_dir=None)
             if self.curr_vad != vad:
                 print(f"setting VAD filter to {args.vad}",file=sys.stderr)
@@ -127,8 +102,5 @@ demo = gr.Interface(
     outputs="text",
     live=True
 )
-
-demo.launch(debug=True)
-
 
 demo.launch(debug=True)
