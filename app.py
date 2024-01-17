@@ -59,27 +59,22 @@ class ServerProcessor:
     def __init__(self, online_asr_proc, min_chunk):
         self.online_asr_proc = online_asr_proc
         self.min_chunk = 1 #min_chunk TODO: change this to min_chunk
-        
-        self.t = ""
 
         self.last_end = None
 
-    # def receive_audio_chunk(self, stream, audio):
+    # def receive_audio_chunk(self, audio):
     #     # Convert the audio file path to audio data
     #     audio_data = load_audio_chunk(audio, 0, 1)
     #     return audio_data
     
-    def receive_audio_chunk(self, stream, new_chunk):
+    def receive_audio_chunk(self, new_chunk):
         
         sr, y = new_chunk
+        print(f"received chunk with sr \n {sr} \n and y \n {y} \n", file=sys.stderr, flush=True)
         y = y.astype(np.float32)
-        # y /= np.max(np.abs(y))
+        y /= np.max(np.abs(y))
             
-        if stream is not None:
-            stream = np.concatenate([stream, y])
-        else:
-            stream = y
-        return stream
+        return y
 
 
 
@@ -99,27 +94,27 @@ class ServerProcessor:
             print(o,file=sys.stderr,flush=True)
             return None
 
-    def process(self, stream, audio):
+    def process(self, audio):
         self.online_asr_proc.init()
-        stream = self.receive_audio_chunk(stream, audio)
-        # if stream is None:
+        a = self.receive_audio_chunk(audio)
+        # if a is None:
         #     print("break here", file=sys.stderr, flush=True)
         #     return
-        self.online_asr_proc.insert_audio_chunk(stream)
+        self.online_asr_proc.insert_audio_chunk(a)
         o = ONLINE.process_iter()
-        return stream , self.format_output_transcript(o)
+        return self.format_output_transcript(o)
 
 
-def transcribe(stream , audio):
+def transcribe(audio):
 
     proc = ServerProcessor(ONLINE, min_chunk = args.min_chunk_size)
-    stream, result = proc.process(stream , audio)
-    return stream, result
+    result = proc.process(audio)
+    return result
 
 demo = gr.Interface(
     fn=transcribe, 
-    inputs=["state", gr.Audio(sources=["microphone"], streaming=True)],
-    outputs=["state", "text"],
+    inputs=gr.Audio(sources=["microphone"], streaming=True),
+    outputs="text",
     live=True
 )
 
