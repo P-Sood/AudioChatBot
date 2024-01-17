@@ -241,7 +241,6 @@ class OnlineASRProcessor:
         self.silence_iters = 0
 
     def insert_audio_chunk(self, audio):
-        print(f"We are here , len of audio is \n {len(audio)}" , file = sys.stderr , flush=True)
         self.audio_buffer = np.append(self.audio_buffer, audio)
 
     def prompt(self):
@@ -282,7 +281,8 @@ class OnlineASRProcessor:
         o = self.transcript_buffer.flush()
         self.commited.extend(o)
         print(">>>>COMPLETE NOW:",self.to_flush(o),file=self.logfile,flush=True)
-        print("INCOMPLETE:",self.to_flush(self.transcript_buffer.complete()),file=self.logfile,flush=True)
+        inc = self.transcript_buffer.complete()
+        print("INCOMPLETE:",self.to_flush(inc),file=self.logfile,flush=True)
 
         # there is a newly confirmed text
 
@@ -310,7 +310,7 @@ class OnlineASRProcessor:
             #self.chunk_at(t)
 
         print(f"len of buffer now: {len(self.audio_buffer)/self.SAMPLING_RATE:2.2f}",file=self.logfile)
-        return self.to_flush(o)
+        return self.to_flush(o), inc
 
     def chunk_completed_sentence(self):
         if self.commited == []: return
