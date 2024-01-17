@@ -72,7 +72,6 @@ class ServerProcessor:
     def receive_audio_chunk(self, new_chunk):
         
         sr, y = new_chunk
-        print(f"received chunk with sr \n {sr} \n and y \n {y} \n", file=sys.stderr, flush=True)
         y = y.astype(np.float32)
         y /= np.max(np.abs(y))
             
