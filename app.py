@@ -39,20 +39,19 @@ language = args.lan
 t = time.time()
 print(f"Loading Whisper {size} model for {language}...",file=sys.stderr,end=" ",flush=True)
 
-asr = FasterWhisperASR(modelsize=size, lan=language, cache_dir=args.model_cache_dir, model_dir=args.model_dir)
-tgt_language = language
+ASR = FasterWhisperASR(modelsize=size, lan=language, cache_dir=args.model_cache_dir, model_dir=args.model_dir)
+TGT_LANGUAGE = language
 
 e = time.time()
 print(f"done. It took {round(e-t,2)} seconds.",file=sys.stderr)
 
 
 print("setting VAD filter",file=sys.stderr)
-asr.use_vad()
+ASR.use_vad()
+TOKENIZER = None
+ONLINE = OnlineASRProcessor(ASR,TOKENIZER,buffer_trimming=(args.buffer_trimming, args.buffer_trimming_sec))
 
-min_chunk = args.min_chunk_size
 
-tokenizer = None
-online = OnlineASRProcessor(asr,tokenizer,buffer_trimming=(args.buffer_trimming, args.buffer_trimming_sec))
 
 class ServerProcessor:
 
@@ -69,13 +68,17 @@ class ServerProcessor:
     #     audio_data = load_audio_chunk(audio, 0, 1)
     #     return audio_data
     
-    def receive_audio_chunk(self, audio_stream):
+    def receive_audio_chunk(self, stream, new_chunk):
         
-        sr, y = audio_stream
+        sr, y = new_chunk
         y = y.astype(np.float32)
         y /= np.max(np.abs(y))
             
-        return y
+        if stream is not None:
+            stream = np.concatenate([stream, y])
+        else:
+            stream = y
+        return stream
 
 
 
@@ -95,25 +98,26 @@ class ServerProcessor:
             print(o,file=sys.stderr,flush=True)
             return None
 
-    def process(self, audio):
+    def process(self, stream, audio):
         self.online_asr_proc.init()
-        a = self.receive_audio_chunk(audio)
+        a = self.receive_audio_chunk(stream, audio)
         if a is None:
             print("break here", file=sys.stderr, flush=True)
             return
         self.online_asr_proc.insert_audio_chunk(a)
-        o = online.process_iter()
+        o = ONLINE.process_iter()
         return self.format_output_transcript(o)
 
 
-def transcribe(audio):
-    proc = ServerProcessor(online, min_chunk = args.min_chunk_size)
-    result = proc.process(audio)
+def transcribe(stream , audio):
+
+    proc = ServerProcessor(ONLINE, min_chunk = args.min_chunk_size)
+    result = proc.process(stream , audio)
     return result
 
 demo = gr.Interface(
     fn=transcribe, 
-    inputs=gr.Audio(sources=["microphone"], streaming=True), 
+    inputs=["state", gr.Audio(sources=["microphone"], streaming=True)],
     outputs="text",
     live=True
 )
