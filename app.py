@@ -76,6 +76,7 @@ class ServerProcessor:
 
             self.last_end = end
             self.t +=  f"{beg} {end}\n"
+            print("\n test \n",self.t, "\n" ,file=sys.stderr, flush=True)
             print("%1.0f %1.0f %s" % (beg,end,o[2]),flush=True,file=sys.stderr)
             return "%1.0f %1.0f %s" % (beg,end,o[2])
         else:
@@ -89,8 +90,8 @@ class ServerProcessor:
             print("break here", file=sys.stderr)
             return
         self.online_asr_proc.insert_audio_chunk(a)
-        online.process_iter()
-        return self.t
+        o = online.process_iter()
+        return self.format_output_transcript(o)
 
 
 def transcribe(audio):
