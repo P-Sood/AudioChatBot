@@ -76,7 +76,8 @@ class ServerProcessor:
         # Loop until we have enough audio data
         while sum(len(x) for x in out) < self.min_chunk*SAMPLING_RATE:
             # Read the next chunk of audio data from the stream
-            _, y = audio_stream
+            print(f"reading audio stream of type \n {type(audio_stream)} \n {audio_stream} \n",file=sys.stderr,flush=True)
+            sr, y = audio_stream
             y = y.astype(np.float32)
             y /= np.max(np.abs(y))
             
@@ -135,7 +136,7 @@ def transcribe(audio):
 
 demo = gr.Interface(
     fn=transcribe, 
-    inputs=gr.Audio(sources=["microphone"], type="filepath", streaming=True), 
+    inputs=gr.Audio(sources=["microphone"], streaming=True), 
     outputs="text",
     live=True
 )
