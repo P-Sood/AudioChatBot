@@ -6,6 +6,8 @@ import time
 from whisper_online import *
 import io
 import soundfile as sf
+import audioop
+
 # Load your model
 
 #unnecesary comment
@@ -72,6 +74,7 @@ class ServerProcessor:
         sr, y = new_chunk
         print(f"received chunk with sr \n {sr} \n and y \n {y} \n", file=sys.stderr, flush=True)
         y = y.astype(np.float32)
+        y = audioop.ratecv(y, 2, 1, sr, 16000, None)[0]
         y /= np.max(np.abs(y))
             
         return y
