@@ -75,7 +75,8 @@ class ServerProcessor:
         y = y.astype(np.float32)
         y /= np.max(np.abs(y))
             
-        y = audioop.ratecv(y, 2, 1, sr, 16000, None)[0]
+        y = audioop.ratecv(y, 2, 1, sr, 16000, None)
+        print(f"changed y to become \n {y} \n", file=sys.stderr, flush=True)
         return y
 
 
