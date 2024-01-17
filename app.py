@@ -7,6 +7,7 @@ from whisper_online import *
 import io
 import soundfile as sf
 import audioop
+import threading
 
 # Load your model
 
@@ -55,7 +56,14 @@ TOKENIZER = None
 ONLINE = OnlineASRProcessor(ASR,TOKENIZER,buffer_trimming=(args.buffer_trimming, args.buffer_trimming_sec))
 
 WORDS = ''
+def clear_words():
+    global WORDS
+    while True:
+        time.sleep(30)  # Wait for 30 seconds
+        WORDS = ''  # Clear the WORDS variable
 
+# Start the thread
+threading.Thread(target=clear_words).start()
 class ServerProcessor:
 
     def __init__(self, online_asr_proc, min_chunk):
@@ -94,12 +102,6 @@ class ServerProcessor:
         WORDS += inc
         return WORDS
 
-def clear_text(*args):
-    # This function will be called when the button is clicked
-    iface.reset()
-
-iface = gr.Interface(fn=clear_text, inputs="button", outputs="text")
-iface.launch()
 
 def transcribe(audio):
 
