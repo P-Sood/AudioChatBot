@@ -71,39 +71,11 @@ class ServerProcessor:
     
     def receive_audio_chunk(self, audio_stream):
         
-        # sr, y = audio_stream
-        # y = y.astype(np.float32)
-        # y /= np.max(np.abs(y))
+        sr, y = audio_stream
+        y = y.astype(np.float32)
+        y /= np.max(np.abs(y))
             
-        # return y
-        
-        # Initialize an empty list to hold the audio chunks
-        out = []
-
-        # Loop until we have enough audio data
-        while len(out) < 1.0*self.min_chunk*SAMPLING_RATE:
-            # Read the next chunk of audio data
-            try:
-                chunk = audio_stream[:self.min_chunk*SAMPLING_RATE]
-                audio_stream = audio_stream[self.min_chunk*SAMPLING_RATE:]
-                # index error means we are less
-            except:
-                break
-
-            # Append the audio data to our list
-            out.append(chunk)
-
-            # Remove the processed chunk from the audio data
-
-        # If we didn't get any audio data, return None
-        if not out:
-            return None
-
-        # Concatenate all the audio chunks into a single numpy array and return it
-        # try:
-        #     return np.concatenate(out)
-        # except:
-        return out
+        return y
 
 
 
