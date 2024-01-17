@@ -90,7 +90,7 @@ class ServerProcessor:
         #     print("break here", file=sys.stderr, flush=True)
         #     return
         self.online_asr_proc.insert_audio_chunk(a)
-        o, inc = ONLINE.process_iter()
+        inc = ONLINE.process_iter()
         WORDS += inc
         return WORDS
 
