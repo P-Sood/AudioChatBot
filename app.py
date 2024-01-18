@@ -99,10 +99,11 @@ class ASRTranscriber:
                 if vad:
                     self.asr.use_vad()
             e = time.time()
-            print(f"done. It took {round(e-t,2)} seconds.",file=sys.stderr)
+            print(f"load whisper. It took {round(e-t,2)} seconds.",file=sys.stderr)
             tokenizer = None
             self.online = OnlineASRProcessor(self.asr, tokenizer, buffer_trimming=('segment', 15))
         if text_model != self.current_text_model:
+            t = time.time()
             p = pipeline("text-generation", 
                                  model=text_model,
                                  tokenizer=tokenizer,                                 
@@ -110,6 +111,8 @@ class ASRTranscriber:
                                  device = torch.device('cpu', index=0),
                                  
                                  )
+            e = time.time()
+            print(f"loaded llama. It took {round(e-t,2)} seconds.",file=sys.stderr)
         proc = ServerProcessor(self.online, min_chunk=1.0 )
         result = proc.process(audio , p)
         return result
