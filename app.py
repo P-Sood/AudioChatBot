@@ -105,10 +105,8 @@ class ASRTranscriber:
         if text_model != self.current_text_model:
             t = time.time()
             p = pipeline("text-generation", 
-                                 model=text_model,
-                                 tokenizer=tokenizer,                                 
+                                 model=text_model,              
                                  torch_dtype=torch.float16, 
-                                 device = torch.device('cpu', index=0),
                                  
                                  )
             e = time.time()
