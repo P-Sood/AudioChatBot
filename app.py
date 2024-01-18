@@ -105,13 +105,16 @@ class ASRTranscriber:
                     self.asr.use_vad()
             e = time.time()
             print(f"load whisper. It took {round(e-t,2)} seconds.",file=sys.stderr)
-            tokenizer = None
-            self.online = OnlineASRProcessor(self.asr, tokenizer, buffer_trimming=('segment', 15))
+            self.online = OnlineASRProcessor(self.asr, tokenizer = None, buffer_trimming=('segment', 15))
         if text_model != self.current_text_model:
             self.current_text_model = text_model
             t = time.time()
+            
+            print("before loading llama.",file=sys.stderr, flush=True)
             self.p = pipeline("text-generation", 
-                                 model=text_model,)
+                                 model=text_model,
+                                 torch_dtype=torch.float32, 
+                                 )
             e = time.time()
             print(f"loaded llama. It took {round(e-t,2)} seconds.",file=sys.stderr)
             
