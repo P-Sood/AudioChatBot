@@ -8,6 +8,8 @@ import io
 import soundfile as sf
 import audioop
 import threading
+from transformers import LlamaTokenizer, LlamaForCausalLM, pipeline
+import torch
 
 #push
 
@@ -15,7 +17,7 @@ WORDS = ''
 def clear_words():
     global WORDS
     while True:
-        time.sleep(30)  # Wait for 30 seconds
+        time.sleep(60)  # Wait for 60 seconds
         WORDS = ''  # Clear the WORDS variable
 
 # Start the thread
@@ -27,7 +29,7 @@ class ServerProcessor:
         self.online = online_asr_proc
         
         self.min_chunk = 1 #min_chunk TODO: change this to min_chunk
-        # self.t = ''
+        self.t = ''
         self.last_end = None
         
 
@@ -48,7 +50,7 @@ class ServerProcessor:
         return y
 
 
-    def process(self, audio):
+    def process(self, audio , pipeline):
         global WORDS
         self.online_asr_proc.init()
         a = self.t_receive_audio_chunk(audio) if REAL_TIME else self.p_receive_audio_chunk(audio)
@@ -56,24 +58,39 @@ class ServerProcessor:
         self.online_asr_proc.insert_audio_chunk(a)
         inc = self.online.process_iter()
         WORDS += inc
-        return WORDS
+        if '?' in inc:
+            sequences = pipeline(
+                    WORDS, 
+                    temperature=0.9, 
+                    top_k=50, 
+                    top_p=0.9,
+                    do_sample=True,
+                    max_length=500
+                    )
+
+            for seq in sequences:
+                self.t += seq['generated_text']
+            WORDS = ''
+            
+        return self.t
 
 
 class ASRTranscriber:
     def __init__(self):
         self.asr = None
         self.online = None
-        self.current_model = None
+        self.current_whisper_model = None
+        self.current_text_model = None
         
         self.curr_vad = False
         
 
-    def transcribe(self, audio, model, vad):
-        if model != self.current_model:
-            # Only reinitialize the ASR and processor if the model has changed
+    def transcribe(self, audio, whisper_model, vad , text_model):
+        if whisper_model != self.current_whisper_model:
+            # Only reinitialize the ASR and processor if the whisper_model has changed
             t = time.time()
-            self.asr = FasterWhisperASR(modelsize=model, lan='en', cache_dir=None, model_dir=None)
-            self.current_model = model
+            self.asr = FasterWhisperASR(modelsize=whisper_model, lan='en', cache_dir=None, model_dir=None)
+            self.current_whisper_model = whisper_model
             if self.curr_vad != vad:
                 print(f"setting VAD filter to {args.vad}",file=sys.stderr)
                 self.curr_vad = vad
@@ -83,10 +100,18 @@ class ASRTranscriber:
             print(f"done. It took {round(e-t,2)} seconds.",file=sys.stderr)
             tokenizer = None
             self.online = OnlineASRProcessor(self.asr, tokenizer, buffer_trimming=('segment', 15))
-        
-
+        if text_model != self.current_text_model:
+            model_name = "meta-llama/Llama-2-7b-chat-hf"
+            tokenizer = LlamaTokenizer.from_pretrained(model_name)
+            model = LlamaForCausalLM.from_pretrained(model_name)
+            pipeline = pipeline("text-generation", 
+                                 model=model,
+                                 tokenizer=tokenizer,                                 
+                                 torch_dtype=torch.float16, 
+                                 device = torch.device('cpu', index=0)
+                                 )
         proc = ServerProcessor(self.online, min_chunk=1.0 )
-        result = proc.process(audio)
+        result = proc.process(audio , pipeline)
         return result
 
 transcriber = ASRTranscriber()
@@ -95,8 +120,9 @@ demo = gr.Interface(
     fn=transcriber.transcribe, 
     inputs=[
         gr.Audio(sources=["microphone"], streaming=True),
-        gr.Radio(['tiny.en','tiny','base.en','base','small.en','small','medium.en','medium','large-v1','large-v2','large-v3','large'], info="Turn on the audio recording before changing me. Allow from 2 to 29 seconds for me to load models" , value = "tiny" , label="Model" , interactive=True),
+        gr.Radio(['tiny.en','tiny','base.en','base','small.en','small','medium.en','medium','large-v1','large-v2','large-v3','large'], info="Turn on the audio recording before changing me. Allow from 2 to 29 seconds for me to load models" , value = "tiny" , label="WhisperModel" , interactive=True),
         gr.Checkbox(value=False, label="VAD" , info="Turn on the audio recording before changing me. Make sure to stop the recording to check out the transcription as it can get buggy.\n I also remove the transcription after 30 seconds so you can get a fresh output to try new things on"),
+        gr.Radio(['meta-llama/Llama-2-7b-chat-hf','meta-llama/Llama-2-13b-chat-hf','meta-llama/Llama-2-70b-chat-hf'], info="Turn on the audio recording before changing me. Allow from 2 to 29 seconds for me to load models" , value = "meta-llama/Llama-2-13b-chat-hf" , label="TextModel" , interactive=True),
     ],
     outputs="text",
     live=True
