@@ -8,7 +8,7 @@ import io
 import soundfile as sf
 import audioop
 import threading
-from transformers import LlamaTokenizer, LlamaForCausalLM, pipeline
+from transformers import pipeline
 import torch
 
 #push
@@ -101,11 +101,8 @@ class ASRTranscriber:
             tokenizer = None
             self.online = OnlineASRProcessor(self.asr, tokenizer, buffer_trimming=('segment', 15))
         if text_model != self.current_text_model:
-            model_name = "meta-llama/Llama-2-7b-chat-hf"
-            tokenizer = LlamaTokenizer.from_pretrained(model_name)
-            model = LlamaForCausalLM.from_pretrained(model_name)
             pipeline = pipeline("text-generation", 
-                                 model=model,
+                                 model=text_model,
                                  tokenizer=tokenizer,                                 
                                  torch_dtype=torch.float16, 
                                  device = torch.device('cpu', index=0)
