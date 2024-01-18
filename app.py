@@ -50,7 +50,7 @@ class ServerProcessor:
         return y
 
 
-    def process(self, audio , pipeline):
+    def process(self, audio , text_gen):
         global WORDS
         self.online_asr_proc.init()
         a = self.t_receive_audio_chunk(audio) if REAL_TIME else self.p_receive_audio_chunk(audio)
@@ -59,7 +59,7 @@ class ServerProcessor:
         inc = self.online.process_iter()
         WORDS += inc
         if '?' in inc:
-            sequences = pipeline(
+            sequences = text_gen(
                     WORDS, 
                     temperature=0.9, 
                     top_k=50, 
@@ -101,14 +101,14 @@ class ASRTranscriber:
             tokenizer = None
             self.online = OnlineASRProcessor(self.asr, tokenizer, buffer_trimming=('segment', 15))
         if text_model != self.current_text_model:
-            pipeline = pipeline("text-generation", 
+            p = pipeline("text-generation", 
                                  model=text_model,
                                  tokenizer=tokenizer,                                 
                                  torch_dtype=torch.float16, 
                                  device = torch.device('cpu', index=0)
                                  )
         proc = ServerProcessor(self.online, min_chunk=1.0 )
-        result = proc.process(audio , pipeline)
+        result = proc.process(audio , p)
         return result
 
 transcriber = ASRTranscriber()
