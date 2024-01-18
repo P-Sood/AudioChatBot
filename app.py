@@ -87,6 +87,8 @@ class ASRTranscriber:
         self.current_whisper_model = None
         self.current_text_model = None
         
+        self.p = None
+        
         self.curr_vad = False
         
 
@@ -108,7 +110,7 @@ class ASRTranscriber:
         if text_model != self.current_text_model:
             self.current_text_model = text_model
             t = time.time()
-            p = pipeline("text-generation", 
+            self.p = pipeline("text-generation", 
                                  model=text_model,              
                                  torch_dtype=torch.float16, 
                                  )
@@ -116,7 +118,7 @@ class ASRTranscriber:
             print(f"loaded llama. It took {round(e-t,2)} seconds.",file=sys.stderr)
             
         proc = ServerProcessor(self.online, min_chunk=1.0 )
-        result = proc.process(audio , p)
+        result = proc.process(audio , self.p)
         return result
 
 transcriber = ASRTranscriber()
