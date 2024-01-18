@@ -23,7 +23,7 @@ def clear_words():
         WORDS = ''  # Clear the WORDS variable
 
 # Start the thread
-threading.Thread(target=clear_words).start()
+# threading.Thread(target=clear_words).start()
 class ServerProcessor:
 
     def __init__(self, online_asr_proc : OnlineASRProcessor, min_chunk):
@@ -60,7 +60,9 @@ class ServerProcessor:
         self.online_asr_proc.insert_audio_chunk(a)
         inc = self.online.process_iter()
         WORDS += inc
+        print(f"WORDS: {WORDS}",file=sys.stderr, flush=True)
         if '?' in inc:
+            print("QUESTION DETECTED",file=sys.stderr, flush=True)
             sequences = text_gen(
                     WORDS, 
                     temperature=0.9, 
@@ -73,6 +75,7 @@ class ServerProcessor:
             for seq in sequences:
                 self.t += seq['generated_text']
             WORDS = ''
+            
             
         return self.t
 
@@ -103,14 +106,15 @@ class ASRTranscriber:
             tokenizer = None
             self.online = OnlineASRProcessor(self.asr, tokenizer, buffer_trimming=('segment', 15))
         if text_model != self.current_text_model:
+            self.current_text_model = text_model
             t = time.time()
             p = pipeline("text-generation", 
                                  model=text_model,              
                                  torch_dtype=torch.float16, 
-                                 
                                  )
             e = time.time()
             print(f"loaded llama. It took {round(e-t,2)} seconds.",file=sys.stderr)
+            
         proc = ServerProcessor(self.online, min_chunk=1.0 )
         result = proc.process(audio , p)
         return result
