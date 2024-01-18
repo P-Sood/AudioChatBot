@@ -113,7 +113,7 @@ class ASRTranscriber:
             print("before loading llama.",file=sys.stderr, flush=True)
             self.p = pipeline("text-generation", 
                                  model=text_model,
-                                 torch_dtype=torch.float32, 
+                                 torch_dtype=torch.float16, 
                                  )
             e = time.time()
             print(f"loaded llama. It took {round(e-t,2)} seconds.",file=sys.stderr)
