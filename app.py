@@ -10,8 +10,10 @@ import audioop
 import threading
 from transformers import pipeline
 import torch
+from huggingface_hub import login
 
-#push
+LLAMA_TOK = os.environ.get('read')
+login(LLAMA_TOK)
 
 WORDS = ''
 def clear_words():
@@ -105,7 +107,8 @@ class ASRTranscriber:
                                  model=text_model,
                                  tokenizer=tokenizer,                                 
                                  torch_dtype=torch.float16, 
-                                 device = torch.device('cpu', index=0)
+                                 device = torch.device('cpu', index=0),
+                                 
                                  )
         proc = ServerProcessor(self.online, min_chunk=1.0 )
         result = proc.process(audio , p)
