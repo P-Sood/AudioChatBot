@@ -65,11 +65,11 @@ class ServerProcessor:
             print("QUESTION DETECTED",file=sys.stderr, flush=True)
             sequences = text_gen(
                     WORDS, 
-                    temperature=0.9, 
+                    temperature=0.1, 
                     top_k=50, 
                     top_p=0.9,
                     do_sample=True,
-                    max_length=500
+                    max_length=50
                     )
 
             print(f"sequences generated \n {sequences}",file=sys.stderr, flush=True)
