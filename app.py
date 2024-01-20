@@ -52,7 +52,7 @@ class ServerProcessor:
         return y
 
 
-    def process(self, audio , text_gen):
+    def process(self, audio , text_gen, tts):
         global WORDS
         self.online_asr_proc.init()
         a = self.t_receive_audio_chunk(audio) if REAL_TIME else self.p_receive_audio_chunk(audio)
@@ -76,9 +76,9 @@ class ServerProcessor:
             for seq in sequences:
                 self.t += seq['generated_text']
             WORDS = ''
-            return self.t
+            return tts(self.t)
             
-        return self.t
+        return tts(WORDS)
 
 class ASRTranscriber:
     def __init__(self):
@@ -86,13 +86,14 @@ class ASRTranscriber:
         self.online = None
         self.current_whisper_model = None
         self.current_text_model = None
+        self.current_tts = None
         
         self.p = None
         
         self.curr_vad = False
         
 
-    def transcribe(self, audio, whisper_model, vad , text_model):
+    def transcribe(self, audio, whisper_model, vad , text_model, tts):
         if whisper_model != self.current_whisper_model:
             # Only reinitialize the ASR and processor if the whisper_model has changed
             t = time.time()
@@ -117,9 +118,20 @@ class ASRTranscriber:
                                  )
             e = time.time()
             print(f"loaded llama. It took {round(e-t,2)} seconds.",file=sys.stderr)
+        if tts != self.current_tts:
+            self.current_tts = tts
+            t = time.time()
+            
+            print("before loading tts.",file=sys.stderr, flush=True)
+            self.tts_p = pipeline("text-generation", 
+                                 model=tts,
+                                #  torch_dtype=torch.float32, 
+                                 )
+            e = time.time()
+            print(f"loaded tts. It took {round(e-t,2)} seconds.",file=sys.stderr)
             
         proc = ServerProcessor(self.online, min_chunk=1.0 )
-        result = proc.process(audio , self.p)
+        result = proc.process(audio , self.p, self.tts_p)
         return result
 
 transcriber = ASRTranscriber()
@@ -132,8 +144,9 @@ demo = gr.Interface(
         gr.Checkbox(value=False, label="VAD" , info="Turn on the audio recording before changing me. Make sure to stop the recording to check out the transcription as it can get buggy.\n I also remove the transcription after 30 seconds so you can get a fresh output to try new things on"),
         # gr.Radio(['meta-llama/Llama-2-7b-chat-hf','meta-llama/Llama-2-13b-chat-hf','meta-llama/Llama-2-70b-chat-hf'], info="Turn on the audio recording to load the models in. Allow 2-3 minutes to load the model. I dont recommend changing it, it takes so long to switch models" , value = "meta-llama/Llama-2-7b-chat-hf" , label="TextModel" , interactive=True),
         gr.Radio(['microsoft/phi-2' , 'ahxt/LiteLlama-460M-1T'], info="Turn on the audio recording to load the models in. Allow 2-3 minutes to load the model. I dont recommend changing it, it takes so long to switch models" , value = "ahxt/LiteLlama-460M-1T" , label="TextModel" , interactive=True),
+        gr.Radio(['suno/bark-small'], info="Turn on the audio recording to load the models in. Allow 2-3 minutes to load the model. I dont recommend changing it, it takes so long to switch models" , value = "suno/bark-small" , label="TTS" , interactive=True),
     ],
-    outputs="text",
+    outputs="audio",
     live=True
 )
 
