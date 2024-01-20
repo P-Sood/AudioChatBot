@@ -78,9 +78,7 @@ class ServerProcessor:
             WORDS = ''
             return self.t
             
-            
         return self.t
-
 
 class ASRTranscriber:
     def __init__(self):
