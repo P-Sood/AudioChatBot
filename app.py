@@ -72,6 +72,7 @@ class ServerProcessor:
                     max_length=500
                     )
 
+            print("sequences generated",file=sys.stderr, flush=True)
             for seq in sequences:
                 self.t += seq['generated_text']
             WORDS = ''
