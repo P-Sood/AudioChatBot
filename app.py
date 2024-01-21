@@ -70,16 +70,16 @@ class ServerProcessor:
                     top_k=50, 
                     top_p=0.9,
                     do_sample=True,
-                    max_length=50
+                    max_length=200
                     )
 
             print(f"sequences generated \n {sequences}",file=sys.stderr, flush=True)
             for seq in sequences:
                 self.t += seq['generated_text']
             WORDS = ''
-            return  (48000, tts(self.t, forward_params={"do_sample": True})['audio'][0])
+            return  (24000, tts(self.t, forward_params={"do_sample": True})['audio'][0])
             
-        return  (48000, tts(WORDS, forward_params={"do_sample": True})['audio'][0])
+        return  (24000, tts(WORDS, forward_params={"do_sample": True})['audio'][0])
 
 class ASRTranscriber:
     def __init__(self):
