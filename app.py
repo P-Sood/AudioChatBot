@@ -76,9 +76,9 @@ class ServerProcessor:
             for seq in sequences:
                 self.t += seq['generated_text']
             WORDS = ''
-            return tts(self.t)
+            return tts(self.t, forward_params={"do_sample": True})['audio']
             
-        return tts(WORDS)
+        return tts(WORDS, forward_params={"do_sample": True})['audio']
 
 class ASRTranscriber:
     def __init__(self):
