@@ -123,7 +123,7 @@ class ASRTranscriber:
             t = time.time()
             
             print("before loading tts.",file=sys.stderr, flush=True)
-            self.tts_p = pipeline("text-generation", 
+            self.tts_p = pipeline("text-to-speech", 
                                  model=tts,
                                 #  torch_dtype=torch.float32, 
                                  )
