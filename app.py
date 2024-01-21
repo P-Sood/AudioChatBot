@@ -131,7 +131,6 @@ class ASRTranscriber:
                                  model=tts,
                                 #  torch_dtype=torch.float32, 
                                  )
-            self.tts_p.tokenizer.pad_token = self.tts_p.tokenizer.eos_token
             e = time.time()
             print(f"loaded tts. It took {round(e-t,2)} seconds.",file=sys.stderr)
             
