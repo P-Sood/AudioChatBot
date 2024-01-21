@@ -77,9 +77,12 @@ class ServerProcessor:
             for seq in sequences:
                 self.t += seq['generated_text']
             WORDS = ''
-            return  (24000, tts(self.t, forward_params={"do_sample": True})['audio'][0])
+            aud = tts(self.t)
+            print(f"AUD: {aud}",file=sys.stderr, flush=True)
             
-        return  (24000, tts(WORDS, forward_params={"do_sample": True})['audio'][0])
+            return  (24000,  aud['audio'][0])
+            
+        return  (24000, tts(WORDS)['audio'][0])
 
 class ASRTranscriber:
     def __init__(self):
@@ -128,6 +131,7 @@ class ASRTranscriber:
                                  model=tts,
                                 #  torch_dtype=torch.float32, 
                                  )
+            self.tts_p.tokenizer.pad_token = self.tts_p.tokenizer.eos_token
             e = time.time()
             print(f"loaded tts. It took {round(e-t,2)} seconds.",file=sys.stderr)
             
