@@ -66,7 +66,7 @@ class ServerProcessor:
             print("QUESTION DETECTED",file=sys.stderr, flush=True)
             sequences = text_gen(
                     WORDS, 
-                    temperature=0.1, 
+                    temperature=0.5, 
                     top_k=50, 
                     top_p=0.9,
                     do_sample=True,
@@ -77,9 +77,9 @@ class ServerProcessor:
             for seq in sequences:
                 self.t += seq['generated_text']
             WORDS = ''
-            return  (16000, tts(self.t, forward_params={"do_sample": True})['audio'][0])
+            return  (48000, tts(self.t, forward_params={"do_sample": True})['audio'][0])
             
-        return  (16000, tts(WORDS, forward_params={"do_sample": True})['audio'][0])
+        return  (48000, tts(WORDS, forward_params={"do_sample": True})['audio'][0])
 
 class ASRTranscriber:
     def __init__(self):
