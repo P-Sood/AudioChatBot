@@ -136,11 +136,11 @@ class ASRTranscriber:
         return result
 
 transcriber = ASRTranscriber()
-REAL_TIME = True
+REAL_TIME = False
 demo = gr.Interface(
     fn=transcriber.transcribe, 
     inputs=[
-        gr.Audio(sources=["microphone"], streaming=True),
+        gr.Audio(sources=["microphone"], type="filepath", streaming=True),
         gr.Radio(['tiny.en','tiny','base.en','base','small.en','small','medium.en','medium','large-v1','large-v2','large-v3','large'], info="Turn on the audio recording before changing me. Allow from 2 to 29 seconds for me to load models" , value = "medium.en" , label="WhisperModel" , interactive=True),
         gr.Checkbox(value=False, label="VAD" , info="Turn on the audio recording before changing me. Make sure to stop the recording to check out the transcription as it can get buggy.\n I also remove the transcription after 30 seconds so you can get a fresh output to try new things on"),
         # gr.Radio(['meta-llama/Llama-2-7b-chat-hf','meta-llama/Llama-2-13b-chat-hf','meta-llama/Llama-2-70b-chat-hf'], info="Turn on the audio recording to load the models in. Allow 2-3 minutes to load the model. I dont recommend changing it, it takes so long to switch models" , value = "meta-llama/Llama-2-7b-chat-hf" , label="TextModel" , interactive=True),
