@@ -12,6 +12,7 @@ from transformers import pipeline
 import torch
 from huggingface_hub import login
 
+
 LLAMA_TOK = os.environ.get('read')
 login(LLAMA_TOK)
 
